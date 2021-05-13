@@ -14,6 +14,9 @@ app.use(express.json());
 //Base de datos
 dbConnection();
 
+//Directorio publico
+app.use(express.static('public'));
+
 //mean_user
 //K1NntVDE7vZ0efnF
 //Rutas
