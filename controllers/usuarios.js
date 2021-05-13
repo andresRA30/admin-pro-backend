@@ -7,12 +7,21 @@ const { generarJWT } = require('../helpers/jwt');
 //const { delete } = require('../routes/usuarios');
 
 const getUsuarios = async (req, res) => {
-    const usuarios = await Usuario.find({}, 'nombre email role google');
+    const desde = Number(req.query.desde) || 0;
 
-    res.status(400).json({
+
+    const [usuarios, total] = await Promise.all([
+        Usuario
+            .find({}, 'nombre email role google img')
+            .skip(desde)
+            .limit(5),
+        Usuario.countDocuments()
+    ])
+    res.json({
         ok: true,
         usuarios,
-        uid: req.uid
+        total
+
     });
 }
 const crearUsuario = async (req, res = response) => {
@@ -53,7 +62,7 @@ const crearUsuario = async (req, res = response) => {
 const actualizarUsuario = async (req, res = response) => {
     // TODO: Validar token y comprobar si es el usuario correcto
     const uid = req.params.id;
-
+    console.log(2)
     try {
         const usuarioDB = await Usuario.findById(uid);
         if (!usuarioDB) {
