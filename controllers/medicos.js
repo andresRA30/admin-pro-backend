@@ -1,40 +1,70 @@
-const { response } = require('express');
+const { response, json } = require('express');
 const Medico = require('../models/medico');
 
 const getMedicos = async (req, res = response) => {
-    const medicos = await Medico.find()
-        .populate('usuario', 'nombre img')
-        .populate('hospital', 'nombre img')
+
+    const desde = Number(req.query.desde) || 0;
+
+
+    const [medicos, total] = await Promise.all([
+        Medico
+            .find({}, 'nombre  img')
+            .skip(desde)
+            .limit(5),
+        Medico.countDocuments()
+    ])
     res.json({
         ok: true,
-        medicos
-    })
+        medicos,
+        total
+
+    });
 }
 
+
+const getMedicoById = async (req, res = response) => {
+
+    const id = req.params.id;
+    try {
+
+        const medico = await Medico.findById(id)
+            .populate('usuario', 'usuario img')
+            .populate('hospital', 'hospital img');
+        res.json({
+            ok: true,
+            medico
+
+
+        });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            ok: false,
+            msg: 'Hable con el administrador'
+
+        });
+    }
+}
 
 const crearMedicos = async (req, res = response) => {
 
     const uid = req.uid;
     const medico = new Medico({
-        usuario: uid,
-        ...req.body
-    });
+        ...req.body,
+        usuario: uid
+    })
     try {
         const medicoDB = await medico.save()
-
         res.json({
             ok: true,
             medico: medicoDB
-        });
-
+        })
     } catch (error) {
-        console.log(error);
         res.status(500).json({
             ok: false,
             msg: 'Hable con el administrador'
         })
     }
-
 }
 
 const actualizarMedico = async (req, res = response) => {
@@ -104,5 +134,6 @@ module.exports = {
     getMedicos,
     crearMedicos,
     actualizarMedico,
-    borrarMedico
+    borrarMedico,
+    getMedicoById
 }
